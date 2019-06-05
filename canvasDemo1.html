@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas实现鼠标跟随效果</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        canvas {
+            background-color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas></canvas>
+    <script>
+        var oCanvas = document.getElementsByTagName('canvas')[0];
+        oCanvas.setAttribute("width", document.documentElement.clientWidth + 'px');
+        oCanvas.setAttribute("height", document.documentElement.clientHeight + 'px');
+        var ctx = oCanvas.getContext('2d');
+        var circleArr = [];
+
+        //初始化
+        function init() {
+            bindEvent();
+            spread();
+        }
+
+        //绑定事件
+        function bindEvent() {
+            window.onresize = function (e) {
+                oCanvas.setAttribute("width", document.documentElement.clientWidth + 'px');
+                oCanvas.setAttribute("height", document.documentElement.clientHeight + 'px');
+            }
+
+            oCanvas.onmousemove = function (e) {
+                var x = e.clientX;
+                var y = e.clientY;
+                var r = 20;
+                var c = getRandomColor();
+                var a = 1;
+                var circle = new Circle(x, y, r, c, a);
+                circleArr.push(circle);
+            }
+
+        }
+
+        //圆圈原型
+        Circle.prototype = {
+            render: function () {
+                ctx.beginPath();
+                ctx.globalAlpha = this.a;
+                ctx.fillStyle = this.c;
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, false);
+                ctx.fill();
+                ctx.closePath();
+                this.move();
+            },
+            move: function () {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.a *= 0.98;
+                this.r *= 0.98;
+            }
+        }
+        
+        //圆圈构造函数
+        function Circle(x, y, r, c, a) {
+            this.x = x; //圆心x坐标
+            this.y = y; //圆心y坐标
+            this.r = r; //园半径大小
+            this.c = c; //颜色
+            this.a = a; //初始透明度
+            this.vx = (Math.random() - 0.5) * 3; //随机移动x方向大小
+            this.vy = (Math.random() - 0.5) * 3; //随机移动y方向大小
+        }
+
+        //生产随机颜色值
+        function getRandomColor() {
+            return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padEnd(6, '0');
+        }
+
+        //扩散绘制
+        function spread() {
+            //清屏
+            ctx.clearRect(0, 0, oCanvas.width, oCanvas.height);
+            //循环渲染圆圈数组
+            circleArr.forEach(function (item, index) {
+                //透明度小于0.05从数组中移除该项
+                if (item.a < 0.05) {
+                    circleArr.splice(index, 1);
+                }
+                item.render();
+            })
+            //刷新
+            requestAnimationFrame(spread);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
